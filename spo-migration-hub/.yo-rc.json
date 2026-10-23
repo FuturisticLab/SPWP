@@ -1,0 +1,18 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "22.14.0",
+    "sdksVersions": {},
+    "version": "1.23.2",
+    "libraryName": "spo-migration-hub",
+    "libraryId": "8d51c92a-7b43-4e18-a93c-52e108f94610",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "spo-migration-hub",
+    "solutionShortDescription": "SharePoint Online Migration Manager & Readiness Hub (SORRMH)",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}

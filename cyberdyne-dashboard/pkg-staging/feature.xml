@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Feature xmlns="http://schemas.microsoft.com/sharepoint/"
+         Id="a97b2f0a-3135-430c-87d2-7c70395781a2"
+         Title="cyberdyne-dashboard Feature"
+         Description="Activates the cyberdyne dashboard components."
+         Version="1.0.0.0"
+         Scope="Web">
+  <ElementManifests>
+    <ElementManifest Location="elements.xml" />
+  </ElementManifests>
+</Feature>

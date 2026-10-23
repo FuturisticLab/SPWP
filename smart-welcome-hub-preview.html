@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Welcome & Hybrid Entra/Geo/Dept Routing Hub — SPFx Preview</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.22; transform: scale(1); }
+      50% { opacity: 0.34; transform: scale(1.06); }
+    }
+    .aurora-orb {
+      animation: pulseGlow 7s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased p-4 md:p-6">
+  <div id="app" class="max-w-6xl mx-auto space-y-5"></div>
+
+  <script>
+    const PERSONAS = [
+      {
+        id: 'eng-sf',
+        label: 'Sarah Chen',
+        badge: 'Eng · SF · SG-Eng-Americas',
+        source: 'Graph + Entra ID',
+        department: 'Engineering',
+        officeLocation: 'San Francisco HQ',
+        city: 'San Francisco',
+        country: 'US',
+        usageLocation: 'US',
+        entraGroups: ['SG-Eng-Americas', 'SG-Cloud-Architects'],
+        jobTitle: 'Principal Cloud Architect',
+        localTime: '09:42 AM PDT'
+      },
+      {
+        id: 'exec-override',
+        label: 'Victoria Sterling',
+        badge: 'Entra Group · SG-Executive-Leadership',
+        source: 'Graph + Entra ID',
+        department: 'Corporate Strategy',
+        officeLocation: 'New York HQ',
+        city: 'New York',
+        country: 'US',
+        usageLocation: 'US',
+        entraGroups: ['SG-Executive-Leadership', 'SG-Board-Advisors'],
+        jobTitle: 'Chief Strategy Officer',
+        localTime: '12:42 PM EDT'
+      },
+      {
+        id: 'sales-lon',
+        label: 'Marcus Vance',
+        badge: 'Sales · London · SG-Sales-EMEA',
+        source: 'Graph + Entra ID',
+        department: 'Sales',
+        officeLocation: 'London Bishopsgate',
+        city: 'London',
+        country: 'UK',
+        usageLocation: 'GB',
+        entraGroups: ['SG-Sales-EMEA', 'SG-EMEA-All'],
+        jobTitle: 'VP Enterprise Accounts EMEA',
+        localTime: '05:42 PM BST'
+      },
+      {
+        id: 'rnd-tokyo',
+        label: 'Kenji Sato',
+        badge: 'R&D · Tokyo · SG-Robotics-Lab',
+        source: 'Graph + Entra ID',
+        department: 'R&D',
+        officeLocation: 'Tokyo Shibuya Lab',
+        city: 'Tokyo',
+        country: 'Japan',
+        usageLocation: 'JP',
+        entraGroups: ['SG-RnD-APAC', 'SG-Robotics-Lab'],
+        jobTitle: 'Lead Robotics Researcher',
+        localTime: '01:42 AM JST'
+      },
+      {
+        id: 'hr-berlin',
+        label: 'Elena Rostova',
+        badge: 'People · Berlin · SG-People-Culture',
+        source: 'Graph + Entra ID',
+        department: 'Human Resources',
+        officeLocation: 'Berlin Mitte',
+        city: 'Berlin',
+        country: 'EMEA',
+        usageLocation: 'DE',
+        entraGroups: ['SG-People-Culture'],
+        jobTitle: 'Director of People & Talent',
+        localTime: '06:42 PM CEST'
+      }
+    ];
+
+    const RULES = [
+      {
+        id: 'rule-1',
+        departments: ['Engineering'],
+        locations: ['San Francisco', 'US', 'Seattle', 'Austin', 'US-West'],
+        entraGroups: ['SG-Eng-Americas', 'SG-Cloud-Architects'],
+        hubTitle: 'Engineering & Cloud Innovation Hub (Americas)',
+        hubUrl: '/sites/eng-americas',
+        description: 'Access sprint boards, cloud architecture RFCs, CI/CD release telemetry, and Americas engineering guilds.',
+        accentHex: '#6366f1',
+        badgeIcon: '⚡',
+        quickActions: [
+          { label: 'Active Sprint Board', url: '#sprints' },
+          { label: 'Architecture RFCs', url: '#rfcs' },
+          { label: 'Production CI/CD Status', url: '#devops' }
+        ]
+      },
+      {
+        id: 'rule-2',
+        departments: ['*'],
+        locations: ['*'],
+        entraGroups: ['SG-Executive-Leadership', 'SG-Board-Advisors'],
+        hubTitle: 'Executive Leadership & Strategy Briefing Room',
+        hubUrl: '/sites/exec-briefing',
+        description: 'Confidential board metrics, M&A pipeline, quarterly earnings previews, and global risk telemetry gated by Entra ID Security Group.',
+        accentHex: '#8b5cf6',
+        badgeIcon: '🔐',
+        quickActions: [
+          { label: 'Q4 Board Deck', url: '#deck' },
+          { label: 'Global KPI Command', url: '#kpis' },
+          { label: 'Enterprise Risk Radar', url: '#risk' }
+        ]
+      },
+      {
+        id: 'rule-3',
+        departments: ['Sales', 'Revenue', 'Account Management'],
+        locations: ['London', 'UK', 'EMEA', 'Paris', 'Frankfurt'],
+        entraGroups: ['SG-Sales-EMEA'],
+        hubTitle: 'EMEA Commercial & Revenue Velocity Hub',
+        hubUrl: '/sites/sales-emea',
+        description: 'Regional territory playbooks, EMEA enterprise deal desk, CRM pipeline intelligence, and Q4 quota trackers.',
+        accentHex: '#10b981',
+        badgeIcon: '📈',
+        quickActions: [
+          { label: 'EMEA Deal Desk', url: '#deals' },
+          { label: 'Territory Heatmaps', url: '#territories' },
+          { label: 'Q4 Executive Playbook', url: '#playbook' }
+        ]
+      },
+      {
+        id: 'rule-4',
+        departments: ['Research', 'R&D', 'Product'],
+        locations: ['Tokyo', 'Japan', 'Singapore', 'Sydney', 'APAC'],
+        entraGroups: ['SG-RnD-APAC', 'SG-Robotics-Lab'],
+        hubTitle: 'APAC Innovation & Robotics R&D Hub',
+        hubUrl: '/sites/rnd-apac',
+        description: 'Asia-Pacific product labs, next-gen hardware prototypes, patent filings, and cross-border research.',
+        accentHex: '#ec4899',
+        badgeIcon: '🔬',
+        quickActions: [
+          { label: 'Shibuya Lab Telemetry', url: '#labs' },
+          { label: 'Patent Filing Portal', url: '#patents' },
+          { label: 'APAC Hardware Roadmap', url: '#roadmap' }
+        ]
+      },
+      {
+        id: 'rule-5',
+        departments: ['Human Resources', 'People', 'Talent'],
+        locations: ['*'],
+        entraGroups: ['SG-People-Culture', 'SG-HR-Global'],
+        hubTitle: 'Global People, Talent & Culture Hub',
+        hubUrl: '/sites/people-culture',
+        description: 'Global benefits enrollment, leadership learning pathways, mobility policies, and regional holiday calendars.',
+        accentHex: '#f43f5e',
+        badgeIcon: '❤️',
+        quickActions: [
+          { label: 'Benefits & Wellness', url: '#benefits' },
+          { label: 'L&D Academy', url: '#academy' },
+          { label: 'Global Mobility Guide', url: '#mobility' }
+        ]
+      }
+    ];
+
+    let state = {
+      selectedPersonaId: 'eng-sf',
+      engineMode: 'hybrid-all', // 'hybrid-all' | 'entra-groups-first' | 'profile-attributes-only'
+      filterMode: 'all',
+      toastMessage: null
+    };
+
+    function matchesToken(userVals, rulePatterns) {
+      const normalized = userVals.map(v => (v || '').trim().toLowerCase()).filter(Boolean);
+      for (const pat of rulePatterns) {
+        const clean = pat.trim().toLowerCase();
+        if (!clean || clean === '*') continue;
+        for (const u of normalized) {
+          if (u === clean || u.includes(clean) || clean.includes(u)) {
+            return pat.trim();
+          }
+        }
+      }
+      return null;
+    }
+
+    function evaluateRoute(persona, engineMode) {
+      const uDepts = [persona.department, persona.jobTitle];
+      const uLocs = [persona.officeLocation, persona.city, persona.country, persona.usageLocation];
+      const uGroups = persona.entraGroups || [];
+      let best = null;
+
+      for (const rule of RULES) {
+        const wildDept = rule.departments.includes('*');
+        const wildLoc = rule.locations.includes('*');
+        const wildGroup = engineMode === 'profile-attributes-only' || !rule.entraGroups || rule.entraGroups.includes('*');
+
+        const mDept = wildDept ? null : matchesToken(uDepts, rule.departments);
+        const mLoc = wildLoc ? null : matchesToken(uLocs, rule.locations);
+        const mGroup = wildGroup ? null : matchesToken(uGroups, rule.entraGroups);
+
+        const deptOk = wildDept || Boolean(mDept);
+        const locOk = wildLoc || Boolean(mLoc);
+        const groupOk = wildGroup || Boolean(mGroup);
+
+        const profileOk = deptOk && locOk && (!wildDept || !wildLoc);
+        const satisfied =
+          (deptOk && locOk && groupOk) ||
+          (engineMode !== 'profile-attributes-only' && Boolean(mGroup) && wildDept && wildLoc) ||
+          (engineMode === 'hybrid-all' && profileOk);
+
+        if (satisfied) {
+          let score = 15;
+          if (mGroup && mDept && mLoc) score = 100;
+          else if (mGroup && (mDept || mLoc)) score = 92;
+          else if (mGroup) score = engineMode === 'entra-groups-first' ? 95 : 85;
+          else if (mDept && mLoc) score = 80;
+          else if (mDept && wildLoc) score = 60;
+          else if (wildDept && mLoc) score = 45;
+
+          if (!best || score > best.score) {
+            const parts = [];
+            if (mGroup) parts.push(`Entra Group: ${mGroup}`);
+            if (mDept) parts.push(`Dept: ${mDept}`);
+            if (mLoc) parts.push(`Geo: ${mLoc}`);
+            best = {
+              rule,
+              score,
+              reason: parts.length ? `Smart Match · ${parts.join(' + ')}` : 'Global Rule Match',
+              isFallback: false
+            };
+          }
+        }
+      }
+
+      if (best) return best;
+
+      return {
+        rule: {
+          id: 'fallback',
+          departments: ['*'],
+          locations: ['*'],
+          entraGroups: ['*'],
+          hubTitle: 'Global Enterprise Commons (Fallback Hub)',
+          hubUrl: '/sites/global-commons',
+          description: 'Company-wide announcements, executive town halls, cross-regional directory, and shared enterprise resources.',
+          accentHex: '#64748b',
+          badgeIcon: '🌐',
+          quickActions: [
+            { label: 'Global Directory', url: '#dir' },
+            { label: 'Executive Newsroom', url: '#news' }
+          ]
+        },
+        score: 0,
+        reason: 'Global Enterprise Fallback (No specific Entra/Dept/Geo match)',
+        isFallback: true
+      };
+    }
+
+    function render() {
+      const persona = PERSONAS.find(p => p.id === state.selectedPersonaId) || PERSONAS[0];
+      const matched = evaluateRoute(persona, state.engineMode);
+      const accent = matched.rule.accentHex || '#6366f1';
+
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-xl">
+          <div class="aurora-orb pointer-events-none absolute -top-32 -right-24 h-80 w-80 rounded-full blur-3xl" style="background: ${accent};"></div>
+
+          <div class="relative z-10 space-y-5">
+            <!-- Header -->
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl text-white font-bold shadow-md" style="background: linear-gradient(135deg, ${accent}, #06b6d4);">✦</div>
+                <div>
+                  <div class="text-xs font-bold tracking-widest uppercase text-[var(--foreground)]">NEXUS GLOBAL INTRANET · Hybrid Entra ID + Graph Router</div>
+                  <div class="text-xs text-[var(--muted-foreground)]">Supports Entra ID Security Groups (/me/transitiveMemberOf) + Department &amp; Geo Attributes simultaneously</div>
+                </div>
+              </div>
+
+              <!-- Engine Mode Selector -->
+              <div class="flex flex-wrap items-center gap-1.5 bg-[var(--background)] p-1.5 rounded-xl border border-[var(--border)]">
+                <span class="text-xs font-bold px-2 text-[var(--muted-foreground)]">Engine Mode:</span>
+                ${[
+                  { id: 'hybrid-all', label: 'Hybrid (Entra + Dept + Geo)' },
+                  { id: 'entra-groups-first', label: 'Entra Groups Priority' },
+                  { id: 'profile-attributes-only', label: 'Dept + Geo Only' }
+                ].map(m => `
+                  <button
+                    onclick="state.engineMode = '${m.id}'; render();"
+                    class="rounded-lg px-2.5 py-1 text-xs font-semibold transition ${state.engineMode === m.id ? 'text-white shadow-sm' : 'text-[var(--foreground)] hover:opacity-80'}"
+                    style="${state.engineMode === m.id ? `background: ${accent};` : ''}"
+                  >${m.label}</button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Persona Simulator -->
+            <div class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-3.5 flex flex-wrap items-center justify-between gap-3">
+              <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">⚡ Simulate Signed-In User:</div>
+              <div class="flex flex-wrap gap-2">
+                ${PERSONAS.map(p => {
+                  const active = p.id === state.selectedPersonaId;
+                  return `
+                    <button
+                      onclick="state.selectedPersonaId = '${p.id}'; render();"
+                      class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border ${active ? 'text-white border-transparent shadow-sm' : 'border-[var(--border)] bg-[var(--card)] text-[var(--foreground)]'}"
+                      style="${active ? `background: ${accent};` : ''}"
+                    >
+                      ${p.label} <span class="opacity-75 font-normal">(${p.badge})</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Two-Column Hero -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+              <div class="lg:col-span-5 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 flex flex-col justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                  <div class="h-14 w-14 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md" style="background: linear-gradient(135deg, ${accent}, #06b6d4);">
+                    ${persona.label.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold uppercase tracking-wider" style="color: ${accent};">Resolved Identity Telemetry</div>
+                    <h2 class="text-xl font-extrabold text-[var(--foreground)]">Welcome back, ${persona.label.split(' ')[0]}</h2>
+                    <p class="text-xs text-[var(--muted-foreground)]">${persona.jobTitle}</p>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div class="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3">
+                    <div class="text-xs text-[var(--muted-foreground)]">Department (Graph /me)</div>
+                    <div class="text-xs font-bold mt-0.5">🏢 ${persona.department}</div>
+                  </div>
+                  <div class="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3">
+                    <div class="text-xs text-[var(--muted-foreground)]">Location (Graph /me)</div>
+                    <div class="text-xs font-bold mt-0.5">📍 ${persona.city}, ${persona.country}</div>
+                  </div>
+                  <div class="col-span-2 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3">
+                    <div class="text-xs text-[var(--muted-foreground)] mb-1.5">Entra ID Security Groups (/me/transitiveMemberOf)</div>
+                    <div class="flex flex-wrap gap-1.5">
+                      ${persona.entraGroups.map(g => `
+                        <span class="rounded-md border border-[var(--border)] bg-[var(--background)] px-2.5 py-0.5 text-xs font-semibold">🔐 ${g}</span>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Spotlight Match -->
+              <div class="lg:col-span-7 rounded-2xl border-2 bg-[var(--background)] p-6 flex flex-col justify-between gap-4 shadow-lg" style="border-color: ${accent};">
+                <div class="space-y-3">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold text-white shadow-sm" style="background: ${accent};">
+                      ✨ ${matched.reason}
+                    </span>
+                    <span class="rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-xs font-bold">
+                      Specificity Score: ${matched.score}%
+                    </span>
+                  </div>
+
+                  <h3 class="text-2xl font-extrabold text-[var(--foreground)] flex items-center gap-2">
+                    <span>${matched.rule.badgeIcon}</span>
+                    <span>${matched.rule.hubTitle}</span>
+                  </h3>
+                  <p class="text-sm text-[var(--muted-foreground)]">${matched.rule.description}</p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  ${matched.rule.quickActions.map(qa => `
+                    <span class="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-semibold">↗ ${qa.label}</span>
+                  `).join('')}
+                </div>
+
+                <div class="flex items-center justify-between border-t border-[var(--border)] pt-4">
+                  <button class="rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md" style="background: ${accent};">
+                    Launch ${matched.rule.hubTitle} →
+                  </button>
+                  <span class="text-xs font-mono text-[var(--muted-foreground)]">${matched.rule.hubUrl}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    render();
+  </script>
+</body>
+</html>

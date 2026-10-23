@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<App xmlns="http://schemas.microsoft.com/sharepoint/2012/app/manifest"
+     Name="cyberdyne-dashboard-client-side-solution"
+     ProductID="{e6a218d7-5d07-4289-9a74-bcf2366b17c8}"
+     Version="1.0.0.0"
+     SharePointMinVersion="16.0.0.0">
+  <Properties>
+    <Title>Cyberdyne Portal &amp; Layout Customizer</Title>
+    <StartPage>~appWebUrl</StartPage>
+  </Properties>
+  <AppPrincipal>
+    <Internal />
+  </AppPrincipal>
+</App>

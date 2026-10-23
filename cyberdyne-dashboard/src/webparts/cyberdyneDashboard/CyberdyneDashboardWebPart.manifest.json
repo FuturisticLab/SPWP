@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "7c13a04a-81f3-4bb4-9c8e-a9b09de761fa",
+  "alias": "CyberdyneDashboardWebPart",
+  "componentType": "WebPart",
+  "version": "1.0.0",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart", "SharePointFullPage", "TeamsPersonalApp"],
+
+  "preconfiguredEntries": [{
+    "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
+    "group": { "default": "Advanced Portals" },
+    "title": { "default": "Cyberdyne Portal & Layout Customizer" },
+    "description": { "default": "Update-proof Cyberpunk HUD dashboard with hero carousel, news, and quick access." },
+    "officeFabricIconFontName": "BIDashboard",
+    "properties": {
+      "companyName": "CYBERDYNE SOLUTIONS",
+      "globalSubtitle": "Global Intranet",
+      "pageHeadline": "ShairePoint Intranet",
+      "accentColor": "#FF1E3C",
+      "glowIntensity": "high",
+      "userName": "A. REED",
+      "userTitle": "Senior Data Analyst",
+      "heroTitle": "QUANTUM SHIFT: PHASE 4 INITIATION",
+      "heroSubtitle": "Access Project Orion Datastreams. Update clearance level 7 required.",
+      "heroCtaText": "PROJECT OVERVIEW",
+      "heroCtaUrl": "#project-overview",
+      "heroBgImage": "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1600&q=80",
+      "showDirectory": true,
+      "showTrendingTopics": true,
+      "showEvents": true
+    }
+  }]
+}

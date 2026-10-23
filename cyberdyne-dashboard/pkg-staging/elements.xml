@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+  <ClientSideComponent
+    Id="7c13a04a-81f3-4bb4-9c8e-a9b09de761fa"
+    Name="CyberdyneDashboardWebPart"
+    Title="Cyberdyne Portal &amp; Layout Customizer"
+    Description="Update-proof Cyberpunk HUD dashboard with hero carousel, news, and quick access."
+    Type="WebPart"
+    ComponentType="WebPart">
+  </ClientSideComponent>
+</Elements>

@@ -1,0 +1,27 @@
+{
+  "name": "cyberdyne-dashboard-webpart",
+  "version": "1.0.0",
+  "private": true,
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "gulp bundle",
+    "clean": "gulp clean",
+    "test": "gulp test",
+    "package": "gulp package-solution --ship"
+  },
+  "dependencies": {
+    "@microsoft/sp-core-library": "1.19.0",
+    "@microsoft/sp-lodash-subset": "1.19.0",
+    "@microsoft/sp-office-ui-fabric-core": "1.19.0",
+    "@microsoft/sp-property-pane": "1.19.0",
+    "@microsoft/sp-webpart-base": "1.19.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "18.2.37",
+    "@types/react-dom": "18.2.15",
+    "jszip": "^3.10.2",
+    "typescript": "5.3.3"
+  }
+}

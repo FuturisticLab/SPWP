@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "cyberdyne-spfx-client-side-solution",
+    "title": "Cyberdyne HUD Portal",
+    "id": "d11882c3-d5c5-485f-afd8-777864873ea2",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.23.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "Dark HUD-style intranet portal web part"
+      },
+      "longDescription": {
+        "default": "Cyberdyne HUD Portal: a configurable dark-theme intranet home page with hero carousel, news, quick access, events, trending topics and directory. Uses only supported SPFx APIs and scoped styles."
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "cyberdyne-spfx Feature",
+        "description": "The feature that activates elements of the cyberdyne-spfx solution.",
+        "id": "c86dcdfe-e022-420f-bf61-bd8f6fc8ad4b",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/cyberdyne-spfx.sppkg"
+  }
+}

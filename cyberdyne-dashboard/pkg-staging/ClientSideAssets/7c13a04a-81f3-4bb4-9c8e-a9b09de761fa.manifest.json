@@ -1,0 +1,48 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "7c13a04a-81f3-4bb4-9c8e-a9b09de761fa",
+  "alias": "CyberdyneDashboardWebPart",
+  "componentType": "WebPart",
+  "version": "1.0.0",
+  "manifestVersion": 2,
+  "requiresCustomScript": false,
+  "supportedHosts": [
+    "SharePointWebPart",
+    "SharePointFullPage",
+    "TeamsPersonalApp"
+  ],
+  "preconfiguredEntries": [
+    {
+      "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
+      "group": {
+        "default": "Advanced Portals"
+      },
+      "title": {
+        "default": "Cyberdyne Portal & Layout Customizer"
+      },
+      "description": {
+        "default": "Update-proof Cyberpunk HUD dashboard with hero carousel, news, and quick access."
+      },
+      "officeFabricIconFontName": "BIDashboard",
+      "properties": {
+        "companyName": "CYBERDYNE SOLUTIONS",
+        "globalSubtitle": "Global Intranet",
+        "pageHeadline": "ShairePoint Intranet",
+        "accentColor": "#FF1E3C",
+        "glowIntensity": "high"
+      }
+    }
+  ],
+  "loaderConfig": {
+    "entryModuleId": "cyberdyne-dashboard-web-part",
+    "internalModuleBaseUrls": [
+      "<!--SPFX_SERVE_TENANT_APP_CATALOG_URL-->"
+    ],
+    "scriptResources": {
+      "cyberdyne-dashboard-web-part": {
+        "type": "path",
+        "path": "cyberdyne-dashboard-web-part.js"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "spo-migration-hub-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/spoMigrationHub/SpoMigrationHubWebPart.js",
+          "manifest": "./src/webparts/spoMigrationHub/SpoMigrationHubWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "SpoMigrationHubWebPartStrings": "lib/webparts/spoMigrationHub/loc/{locale}.js"
+  }
+}

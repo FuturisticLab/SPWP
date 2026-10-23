@@ -1,0 +1,22 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "whichFolder": "subdir",
+    "solutionName": "cyberdyne-spfx",
+    "environment": "spo",
+    "useGulp": false,
+    "componentType": "webpart",
+    "template": "react",
+    "componentName": "CyberdyneDashboard",
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "22.23.3",
+    "sdksVersions": {},
+    "version": "1.23.2",
+    "libraryName": "cyberdyne-spfx",
+    "libraryId": "d11882c3-d5c5-485f-afd8-777864873ea2",
+    "packageManager": "npm",
+    "solutionShortDescription": "cyberdyne-spfx description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false
+  }
+}

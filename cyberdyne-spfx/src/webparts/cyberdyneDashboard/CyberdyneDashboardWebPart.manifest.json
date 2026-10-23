@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "ea0735a0-8210-45c5-9c35-be5231a6c098",
+  "alias": "CyberdyneDashboardWebPart",
+  "componentType": "WebPart",
+
+  // The "*" signifies that the version should be taken from the package.json
+  "version": "*",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart", "SharePointFullPage", "TeamsPersonalApp", "TeamsTab"],
+  "supportsThemeVariants": false,
+  "supportsFullBleed": true,
+
+  "preconfiguredEntries": [{
+    "groupId": "5c03119e-3074-46fd-976b-c60198311f70", // Advanced
+    "group": { "default": "Advanced" },
+    "title": { "default": "Cyberdyne HUD Portal" },
+    "description": { "default": "Dark HUD-style intranet home: hero carousel, news, quick access, events, topics and directory. Fully configurable from the property pane." },
+    "officeFabricIconFontName": "ViewDashboard",
+    "properties": {
+      "companyName": "CYBERDYNE SOLUTIONS",
+      "globalSubtitle": "Global Intranet",
+      "pageHeadline": "SharePoint Intranet",
+      "accentColor": "#ff1e3c",
+      "glowIntensity": "high",
+      "showHeaderAndFooter": true,
+      "showEvents": true,
+      "showTrendingTopics": true,
+      "showDirectory": true,
+      "directoryUrl": "",
+      "slidesText": "QUANTUM SHIFT: PHASE 4 INITIATION | Access Project Orion Datastreams. Update clearance level 7 required. | PROJECT OVERVIEW | # | https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1600&q=80\nSECTOR 9 SECURITY AUDIT | All endpoints patched and verified. Review the incident summary. | VIEW REPORT | # | https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1600&q=80\nNEURAL INTERFACE PROTOCOL | New onboarding standards for interface operators are now live. | READ PROTOCOL | # | https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80",
+      "newsText": "Cybersecurity Update: Sector 9 Secure | Sector 9 Secure | 1 hour ago | #\nQ3 Performance Review | Q3 Performance Review | 15 days ago | #\nNew Neural Interface Protocol | New Neural Interface Protocol | 12 months ago | #",
+      "quickLinksText": "SUBMIT REPORT | #\nRESOURCES | #\nMY WORKSPACES | #\nHELPDESK | #",
+      "eventsText": "Quantum Sim | 14.11 · 09:00 | #",
+      "topicsText": "Project Orion, Data Ethics, AI Ethics, Sector 7"
+    }
+  }]
+}

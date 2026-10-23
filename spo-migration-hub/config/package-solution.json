@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "spo-migration-hub-client-side-solution",
+    "title": "SharePoint Online Migration Manager & Readiness Hub",
+    "id": "8d51c92a-7b43-4e18-a93c-52e108f94610",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "FuturisticLab",
+      "websiteUrl": "https://github.com/FuturisticLab/SORRMH",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.23.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "SharePoint Online Migration Manager & Readiness Hub (SORRMH) — Pre-Flight Assessment, Character Remediation, Permissions Alignment, Target SPO & Azure Pipeline, and Executive Reporting."
+      },
+      "longDescription": {
+        "default": "Full-featured SharePoint Framework (SPFx) Web Part mirroring the PowerShell SharePoint Online Migration Manager & Readiness Hub. Includes multi-environment profile targeting (Dev, QA, Staging, Production), source inventory scanning & SHA-256 verification, ASCII directory tree generation, bottom-up character remediation & rollback script generation, NTFS permissions & Entra ID UPN alignment, live SharePoint library & storage quota inspection, 50 GB batch throughput benchmarking, anomaly monitoring, and standalone HTML executive report generation."
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "SharePoint Online Migration Manager & Readiness Hub Feature",
+        "description": "Activates the SharePoint Online Migration Manager & Readiness Hub Web Part.",
+        "id": "c391a84e-2d15-48b7-9e64-71a035c82914",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/spo-migration-hub.sppkg"
+  }
+}
