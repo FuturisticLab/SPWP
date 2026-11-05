@@ -3,9 +3,15 @@
 
 ---
 
-## 1. High-Level Architecture
+## 1. High-Level Architecture & Emergency Operative Design
 
 The platform combines a **client-side React/SPFx Web Part** with an optional **PowerShell 7 / WPF desktop automation engine**. Both share the exact same 19-rule Microsoft SharePoint Online compliance algorithms and data structures.
+
+### Operational Context: Rapid Emergency Response
+The architecture is purpose-built to function as a **rapid emergency operative** in conjunction with official Microsoft programs (SPMT, Migration Manager, FastTrack):
+- **Zero Ingestion Lag**: Can be accessed immediately via any authenticated browser session without awaiting weeks of provisioning or agent installations.
+- **Vulnerability Extraction**: Provides instant assessment, sanitization, and priority wave relocation of sensitive digital assets from legacy, compromised, or vulnerable-prone on-premises servers directly into SharePoint Online.
+- **Fail-Safe Rollback**: Pre-execution Robocopy mirroring and reversible PowerShell scripts guarantee that original files can be restored if emergency cutover priorities shift.
 
 ```
 +----------------------------------------------------------------------------------------------------+
