@@ -1,6 +1,10 @@
 # 04. Commercial Market Valuation, TCO & Multi-Tier Asset Appraisal
 ## Comprehensive Financial Breakdown, Valuation Methodology & Operational ROI
 
+> [!NOTE]
+> **Important Clarification & Disclaimer**:
+> All figures, market comparatives, and valuation metrics detailed below are presented **figuratively speaking** for analytical, benchmarking, and internal appraisal purposes only. This solution is developed and provided as a **not-for-profit, open internal engineering asset** and rapid emergency response tool to support Microsoft 365 migrations without commercial monetization or licensing fees.
+
 ---
 
 ## 1. Executive Valuation Summary: Three-Tier Perspective
@@ -11,15 +15,15 @@ To provide an objective, auditable financial picture for stakeholders, systems e
 +----------------------------------------------------------------------------------------------------+
 |                                    PLATFORM VALUATION TIERS                                        |
 +----------------------------------------------------------------------------------------------------+
-| 1. Single-Project Cost Displacement (Immediate Hard Savings):          $40,000 – $80,000 USD       |
-| 2. Internal Enterprise Replacement Cost (Cost-to-Rebuild):            $120,000 – $140,000 USD      |
-| 3. Commercial ISV / SaaS Multiple Asset Appraisal:                     $375,000 – $520,000 USD      |
+| 1. Single-Project Cost Displacement (Immediate Hard Savings):          $40,000 - $80,000 USD       |
+| 2. Internal Enterprise Replacement Cost (Cost-to-Rebuild):            $120,000 - $140,000 USD      |
+| 3. Commercial ISV / SaaS Multiple Asset Appraisal:                     $375,000 - $520,000 USD      |
 +----------------------------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 2. Methodology 1: Single-Project Cost Displacement ($40,000 – $80,000)
+## 2. Methodology 1: Single-Project Cost Displacement ($40,000 - $80,000)
 
 This tier evaluates what a mid-to-large organization (15 TB to 30 TB data footprint) directly avoids spending on third-party licenses, overage fees, and consultant triage on a single emergency or standard cutover project.
 
@@ -29,28 +33,30 @@ This tier evaluates what a mid-to-large organization (15 TB to 30 TB data footpr
   - Data ingestion / capacity overage surcharges: **$12,000**
 - **Specialized Third-Party Vendor Training & Admin Certifications**: **$4,000**
 - **Dedicated Cloud Migration Virtual Machine Hosting**: **$3,600/yr**
-- **External Remediation Consulting Triage** (triaging path and permission errors): **$15,000 – $35,000**
-- **Total Immediate Cost Displaced**: **$57,100 – $77,100 USD**
+- **External Remediation Consulting Triage** (triaging path and permission errors): **$15,000 - $35,000**
+- **Total Immediate Cost Displaced**: **$57,100 - $77,100 USD**
 
 ---
 
-## 3. Methodology 2: Replacement Cost / Cost-to-Rebuild ($120,000 – $140,000)
+## 3. Methodology 2: Replacement Cost / Cost-to-Rebuild ($120,000 - $140,000)
 
 This tier represents the baseline engineering capital required if an enterprise or systems integrator were to build this dual-engine platform from the ground up:
 
 ### Engineering Labor Math:
 - **Total Specialized Engineering Time**: 680 Hours (~4.25 months of full-time dedicated engineering).
-- **Blended Hourly Rate**: $165 – $185 / hour (standard market consulting rate for senior architects specialized in SPFx v1.22, React 17+, TypeScript 5.8, PowerShell 7, WPF, and SharePoint Online REST APIs).
+- **Blended Hourly Rate**: $165 - $185 / hour (standard market consulting rate for senior architects specialized in SPFx v1.22, React 17+, TypeScript 5.8, PowerShell 7, WPF, and SharePoint Online REST APIs).
   $$\text{Core Development Cost} = 680\text{ Hours} \times \$175/\text{hr} = \mathbf{\$119,000\text{ USD}}$$
 - **Quality Assurance & Testing Rigor**: **$15,000** (creation of automated Jest test suites with 25 unit test cases, AST syntax parsers, and Heft packaging pipelines).
 - **Security & Compliance Auditing**: **$6,000** (OWASP threat modeling, SSRF/XSS mitigation, and Microsoft 2026 Limits validation).
-- **Total Replacement Cost**: **$120,000 – $140,000 USD**.
+- **Total Replacement Cost**: **$120,000 - $140,000 USD**.
 
 ---
 
-## 4. Methodology 3: Commercial ISV / Enterprise SaaS Multiple ($375,000 – $520,000)
+## 4. Methodology 3: Commercial ISV / Enterprise SaaS Multiple ($375,000 - $520,000)
 
-This tier reflects how a venture capitalist, Managed Service Provider (MSP), or software aggregator values the intellectual property (IP) if packaged and licensed as an enterprise B2B SaaS or migration utility.
+*(Note: Stated purely figuratively for comparative benchmarking; this solution is strictly not-for-profit).*
+
+This tier illustrates how a software aggregator or market analyst would figuratively evaluate the asset if benchmarked against proprietary enterprise software products:
 
 ### Commercial Modeling Breakdown:
 - **Market Context**: Enterprise competitors in this exact space command between **$6,000 and $10,000/year per admin license** or charge recurring monthly subscription fees.
@@ -68,7 +74,7 @@ This tier reflects how a venture capitalist, Managed Service Provider (MSP), or 
 
 | Feature / Capability | **SPWP (This Solution)** | **ShareGate Migrate** | **AvePoint FLY** | **Quest On Demand** | **Microsoft SPMT** |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Pricing Model** | **Free / Owned IP** | $5,995 – $9,995/yr/admin | $6,000+ /TB or per-user | $10,000+ /project | Free (Included) |
+| **Pricing Model** | **Free / Owned IP (Not-for-Profit)** | $5,995 - $9,995/yr/admin | $6,000+ /TB or per-user | $10,000+ /project | Free (Included) |
 | **Client-Side In-Browser Runner** | **YES (SPHttpClient)** | NO (Desktop Only) | NO (SaaS Only) | NO (SaaS Only) | NO (Desktop Only) |
 | **Tenant Admin Rights Required** | **NO (Member/Edit OK)** | YES (Admin required) | YES (Admin required) | YES (Admin required) | YES (Admin required) |
 | **Zero Credential Storage Policy** | **YES (Session Auth)** | NO (Stored creds) | NO (Stored creds/app) | NO (OAuth/Tokens) | NO (Stored login) |
@@ -87,7 +93,7 @@ This solution is explicitly designed to be used in conjunction with official Mic
 
 It serves as an agile, immediate-readiness operative when there is an urgent, time-sensitive need to extract critical business files away from legacy, vulnerable-prone on-premises file shares or compromised hardware into the protected Microsoft 365 cloud. 
 
-Because it operates directly within an authenticated browser session, migration engineers can initiate discovery, path sanitization, and priority wave cutovers immediately—eliminating weeks of procurement cycles, infrastructure provisioning, or external agent setups during emergency cutovers.
+Because it operates directly within an authenticated browser session, migration engineers can initiate discovery, path sanitization, and priority wave cutovers immediately - eliminating weeks of procurement cycles, infrastructure provisioning, or external agent setups during emergency cutovers.
 
 ### 2. Elimination of Post-Migration Failures & Support Tickets
 Failed migrations typically occur because files fail to upload halfway through cutover due to:
