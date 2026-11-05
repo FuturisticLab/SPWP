@@ -72,9 +72,9 @@ export default class SpoMigrationHubWebPart extends BaseClientSideWebPart<ISpoMi
                   label: 'Default Target Environment Profile',
                   selectedKey: this.properties.defaultEnvironment || 'Development',
                   options: [
-                    { key: 'Development', text: 'Development (50 MB / 260 chars)' },
-                    { key: 'Test / QA', text: 'Test / QA (500 MB / 300 chars)' },
-                    { key: 'Staging / Pre-Prod', text: 'Staging / Pre-Prod (5 GB / 350 chars)' },
+                    { key: 'Development', text: 'Development (250 MB / 260 chars)' },
+                    { key: 'Test / QA', text: 'Test / QA (2 GB / 300 chars)' },
+                    { key: 'Staging / Pre-Prod', text: 'Staging / Pre-Prod (15 GB / 350 chars)' },
                     { key: 'Production', text: 'Production (250 GB / 400 chars)' }
                   ]
                 }),

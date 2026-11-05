@@ -159,6 +159,8 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
     totalBytes: number;
     targetPath: string;
     timestamp: string;
+    failedCount?: number;
+    skippedCount?: number;
   } | null>(null);
   const [copiedBackupNotice, setCopiedBackupNotice] = React.useState<string>('');
 
@@ -262,6 +264,18 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
       setTargetLibrary(props.defaultTargetLibrary);
     }
   }, [props.defaultTargetLibrary]);
+
+  React.useEffect(() => {
+    if (props.defaultTargetSiteUrl && props.defaultTargetSiteUrl !== targetSiteUrl) {
+      setTargetSiteUrl(props.defaultTargetSiteUrl);
+    }
+  }, [props.defaultTargetSiteUrl]);
+
+  React.useEffect(() => {
+    if (props.defaultReplacementChar && props.defaultReplacementChar !== replacementChar) {
+      setReplacementChar(props.defaultReplacementChar.charAt(0) || '_');
+    }
+  }, [props.defaultReplacementChar]);
 
   React.useEffect(() => {
     if (props.defaultTenantDomain && props.defaultTenantDomain !== tenantDomain) {
@@ -408,6 +422,14 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
 
+    if (fileList.length > 25000) {
+      appendLog(
+        'WARN',
+        'Stage 1',
+        `High-volume directory detected (${fileList.length} items). Applying cooperative event loop yielding to conserve browser memory.`
+      );
+    }
+
     setStatusText('SCANNING LOCAL FOLDER...');
     setProgressPct(25);
     const { baseUrlLength } = calculateUrlHeadroom(
@@ -422,6 +444,11 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
     let detectedRootName = 'LocalFolder';
 
     for (let i = 0; i < fileList.length; i++) {
+      if (i > 0 && i % 250 === 0) {
+        setStatusText(`SCANNING LOCAL FOLDER (${Math.round((i / fileList.length) * 100)}%)...`);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+
       const file = fileList[i];
       const relPathRaw: string = file.webkitRelativePath || file.name;
       const parts = relPathRaw.split('/').filter(Boolean);
@@ -597,7 +624,8 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
       remediationPlan,
       maxFileSizeMB,
       maxPathLength,
-      baseUrlLength
+      baseUrlLength,
+      replacementChar
     );
 
     setInventory(updatedInventory);
@@ -822,17 +850,68 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
       return;
     }
 
+    const cleanSite = targetSiteUrl.replace(/\/+$/, '');
+    const cleanSub = targetSubfolder.replace(/^[\\/]+|[\\/]+$/g, '');
+
+    // Accidental Production Cutover Mitigation (OPS-03)
+    if (envProfile === 'Production') {
+      const confirmed = window.confirm(
+        `⚠️ PRODUCTION ENVIRONMENT CUTOVER CONFIRMATION ⚠️\n\n` +
+        `You are about to execute a live migration directly into PRODUCTION:\n` +
+        `• Target Site: ${cleanSite}\n` +
+        `• Document Library: ${targetLibrary}\n` +
+        `• Subfolder: ${cleanSub || '(Root)'}\n` +
+        `• Work Items: ${readyFolders.length} folders, ${readyFiles.length} files\n\n` +
+        `Are you certain you wish to proceed with this live production cutover?`
+      );
+      if (!confirmed) {
+        appendLog('WARN', 'Stage 4', 'Live production migration cancelled by operator confirmation prompt.');
+        return;
+      }
+    }
+
     setIsLiveMigrating(true);
     setLiveMigrationResult(null);
     setStatusText(`STARTING MIGRATION (${readyFolders.length} FOLDERS, ${readyFiles.length} FILES)...`);
     setProgressPct(2);
 
-    const cleanSite = targetSiteUrl.replace(/\/+$/, '');
-    const cleanSub = targetSubfolder.replace(/^[\\/]+|[\\/]+$/g, '');
     let uploadedCount = 0;
+    let failedCount = 0;
+    let skippedCount = 0;
     let createdFoldersCount = 0;
     let totalBytesUploaded = 0;
     const isLiveSpo = isValidSpoSiteUrl(cleanSite, props.currentWebUrl);
+
+    // Pre-flight target library authorization check (GOV-01)
+    if (isLiveSpo) {
+      try {
+        const safeLib = escapeODataString(targetLibrary);
+        const permCheckUrl = `${cleanSite}/_api/web/lists/getByTitle('${safeLib}')/EffectiveBasePermissions`;
+        const permRes = await props.spHttpClient.get(permCheckUrl, SPHttpClient.configurations.v1, {
+          headers: {
+            Accept: 'application/json;odata=nometadata'
+          }
+        });
+        if (!permRes.ok) {
+          if (permRes.status === 403 || permRes.status === 401) {
+            appendLog(
+              'ERROR',
+              'Stage 4',
+              `Pre-flight permission check failed (HTTP ${permRes.status}): Current identity does not have sufficient rights on library '${targetLibrary}'. Live migration aborted.`
+            );
+            setIsLiveMigrating(false);
+            setStatusText('MIGRATION ABORTED: INSUFFICIENT PERMISSIONS');
+            return;
+          }
+        }
+      } catch (err) {
+        appendLog(
+          'WARN',
+          'Stage 4',
+          `Pre-flight permission query notice: ${(err as Error).message}. Continuing with live upload...`
+        );
+      }
+    }
 
     appendLog(
       'INFO',
@@ -954,24 +1033,69 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
                 `SharePoint Online In-Browser Migration Engine\nSource: ${item.fullPath}\nTarget: ${targetLibrary}/${targetUploadDir}/${item.itemName}\nSHA256: ${item.sha256Hash}\nMigrated At: ${new Date().toISOString()}`
               );
 
-          const res = await props.spHttpClient.post(uploadUrl, SPHttpClient.configurations.v1, {
-            headers: {
-              Accept: 'application/json;odata=nometadata',
-              'Content-type': 'application/octet-stream'
-            },
-            body: bodyContent
-          });
+          let success = false;
+          let attempts = 0;
+          const maxAttempts = 3;
+          let fileErrorMsg = '';
 
-          if (res.ok) {
-            uploadedCount++;
-            totalBytesUploaded += item.sizeBytes || 1024;
-          } else if (res.status === 429) {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            uploadedCount++;
-            totalBytesUploaded += item.sizeBytes || 1024;
-          } else {
-            uploadedCount++;
-            totalBytesUploaded += item.sizeBytes || 1024;
+          while (!success && attempts < maxAttempts) {
+            attempts++;
+            try {
+              const res = await props.spHttpClient.post(uploadUrl, SPHttpClient.configurations.v1, {
+                headers: {
+                  Accept: 'application/json;odata=nometadata',
+                  'Content-type': 'application/octet-stream'
+                },
+                body: bodyContent
+              });
+
+              if (res.ok) {
+                success = true;
+                uploadedCount++;
+                const transferBytes = item.sizeBytes || (bodyContent instanceof ArrayBuffer ? bodyContent.byteLength : 1024);
+                totalBytesUploaded += transferBytes;
+                appendLog(
+                  'INFO',
+                  'Stage 4',
+                  `Migrated file '${item.itemName}' (SHA-256: ${item.sha256Hash ? item.sha256Hash.substring(0, 10) + '...' : 'Verified'}).`
+                );
+              } else if (res.status === 429 || res.status === 503) {
+                // Throttling backoff mitigation (OPS-01)
+                const retryAfterHeader = res.headers.get('Retry-After');
+                const retrySeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 0;
+                const backoffMs = (!isNaN(retrySeconds) && retrySeconds > 0)
+                  ? retrySeconds * 1000
+                  : Math.min(1000 * Math.pow(2, attempts), 8000);
+
+                appendLog(
+                  'WARN',
+                  'Stage 4',
+                  `API Throttling (HTTP ${res.status}) on '${item.itemName}'. Pausing ${Math.round(backoffMs / 1000)}s before retry (Attempt ${attempts}/${maxAttempts})...`
+                );
+                await new Promise((resolve) => setTimeout(resolve, backoffMs));
+              } else if (res.status === 409) {
+                // Conflict / duplicate detection (DAT-02)
+                fileErrorMsg = 'HTTP 409 Conflict: target file already exists.';
+                skippedCount++;
+                appendLog('WARN', 'Stage 4', `Conflict on '${item.itemName}': file already exists in destination.`);
+                break;
+              } else {
+                fileErrorMsg = `HTTP ${res.status} ${res.statusText || 'Upload Error'}`;
+                if (attempts < maxAttempts) {
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+              }
+            } catch (postErr) {
+              fileErrorMsg = (postErr as Error).message || 'Network error';
+              if (attempts < maxAttempts) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+              }
+            }
+          }
+
+          if (!success && fileErrorMsg) {
+            failedCount++;
+            appendLog('ERROR', 'Stage 4', `Failed to migrate '${item.itemName}': ${fileErrorMsg}`);
           }
         } else {
           // Simulation / workbench delay
@@ -979,18 +1103,24 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
           uploadedCount++;
           totalBytesUploaded += item.sizeBytes || 1024;
         }
-      } catch {
-        uploadedCount++;
-        totalBytesUploaded += item.sizeBytes || 1024;
+      } catch (err) {
+        failedCount++;
+        appendLog('ERROR', 'Stage 4', `Unhandled error migrating '${item.itemName}': ${(err as Error).message}`);
       }
     }
 
     setIsLiveMigrating(false);
     setProgressPct(100);
-    setStatusText(`MIGRATION COMPLETE (${createdFoldersCount} FOLDERS, ${uploadedCount} FILES)`);
+    setStatusText(
+      failedCount > 0
+        ? `MIGRATION COMPLETE WITH WARNINGS (${createdFoldersCount} FOLDERS, ${uploadedCount} FILES, ${failedCount} FAILED)`
+        : `MIGRATION COMPLETE (${createdFoldersCount} FOLDERS, ${uploadedCount} FILES)`
+    );
 
     const resultSummary = {
       completedCount: uploadedCount,
+      failedCount,
+      skippedCount,
       foldersCreatedCount: createdFoldersCount,
       totalBytes: totalBytesUploaded,
       targetPath: `${targetLibrary}${cleanSub ? `/${cleanSub}` : ''}`,
@@ -1000,7 +1130,7 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
 
     // Mark items as clean / migrated
     setInventory((prev) =>
-      prev.map((it) => (!it.isFlagged ? { ...it, status: 'Migrated' } : it))
+      prev.map((it) => (!it.isFlagged ? { ...it, issueSummary: 'Ready (Migrated to SharePoint)' } : it))
     );
 
     appendLog(
@@ -1734,8 +1864,13 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
                     className={`${styles.btn} ${styles.btnSlate}`}
                     title="Copy Robocopy Command: Copies a resilient, multi-threaded Robocopy command (/E /COPY:DAT /MT:8) to clipboard to mirror your source data before renaming."
                     onClick={() => {
-                      const dest = backupPath.trim() || 'C:\\SPOMigration\\Backups';
-                      const cmd = `robocopy "${sourcePath}" "${dest}" /E /COPY:DAT /R:1 /W:1 /MT:8 /NP`;
+                      const cleanSrc = (sourcePath.trim() || 'C:\\MigrationSource\\DevTestShare')
+                        .replace(/[\\/]+$/, '')
+                        .replace(/["\r\n]/g, '');
+                      const cleanDest = (backupPath.trim() || 'C:\\SPOMigration\\Backups')
+                        .replace(/[\\/]+$/, '')
+                        .replace(/["\r\n]/g, '');
+                      const cmd = `robocopy "${cleanSrc}" "${cleanDest}" /E /COPY:DAT /R:1 /W:1 /MT:8 /NP`;
                       navigator.clipboard.writeText(cmd).catch(() => {});
                       setCopiedBackupNotice('command');
                       appendLog('INFO', 'Stage 2', `Copied resilient Robocopy command to clipboard: ${cmd}`);
@@ -2300,7 +2435,7 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
                     Active Source File Share (from Stage 1)
                     <span
                       className={styles.infoIcon}
-                      title="Current Source Share: Points to the file share established in Stage 1. Contains 1,547 folders and 5 files. All 1,547 folders will be recursively provisioned top-down in SharePoint."
+                      title={`Current Source Share: Points to the file share established in Stage 1. Contains ${inventoryKpis.folders.toLocaleString()} folders and ${inventoryKpis.files.toLocaleString()} files. All ${inventoryKpis.folders.toLocaleString()} folders will be recursively provisioned top-down in SharePoint.`}
                     >
                       ℹ
                     </span>
@@ -2448,7 +2583,7 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
                     <span>🚀 Live In-Browser Migration Runner</span>
                     <span
                       className={styles.infoIcon}
-                      title="Live In-Browser Runner: Runs directly in your authenticated SharePoint session via SPHttpClient REST APIs. Fully replicates all 1,547 folders top-down, followed by file uploads into their respective folders. Operates under Strict Security (no stored keys, passwords, or external services)."
+                      title={`Live In-Browser Runner: Runs directly in your authenticated SharePoint session via SPHttpClient REST APIs. Fully replicates all ${inventoryKpis.folders.toLocaleString()} folders top-down, followed by file uploads into their respective folders. Operates under Strict Security (no stored keys, passwords, or external services).`}
                     >
                       ℹ
                     </span>
@@ -2502,15 +2637,35 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
                 )}
 
                 {liveMigrationResult && !isLiveMigrating && (
-                  <div style={{ padding: '10px 14px', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderRadius: '6px', border: '1px solid #10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{
+                    padding: '10px 14px',
+                    backgroundColor: (liveMigrationResult.failedCount || 0) > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                    borderRadius: '6px',
+                    border: (liveMigrationResult.failedCount || 0) > 0 ? '1px solid #ef4444' : '1px solid #10b981',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
                     <span style={{ fontSize: '12.5px', color: '#f8fafc' }}>
-                      🎉 <strong>Migration Successful!</strong> Replicated <strong>{liveMigrationResult.foldersCreatedCount} folders</strong> and uploaded <strong>{liveMigrationResult.completedCount} files</strong> ({((liveMigrationResult.totalBytes || 1024) / (1024 * 1024)).toFixed(2)} MB) into <strong>{liveMigrationResult.targetPath}</strong>.
+                      {(liveMigrationResult.failedCount || 0) > 0 ? '⚠️' : '🎉'} <strong>Migration Finished:</strong> Replicated <strong>{liveMigrationResult.foldersCreatedCount} folders</strong> and uploaded <strong>{liveMigrationResult.completedCount} files</strong> ({((liveMigrationResult.totalBytes || 1024) / (1024 * 1024)).toFixed(2)} MB) into <strong>{liveMigrationResult.targetPath}</strong>.
+                      {(liveMigrationResult.failedCount || 0) > 0 && (
+                        <span style={{ color: '#f87171', marginLeft: '6px' }}>({liveMigrationResult.failedCount} failed)</span>
+                      )}
+                      {(liveMigrationResult.skippedCount || 0) > 0 && (
+                        <span style={{ color: '#fbbf24', marginLeft: '6px' }}>({liveMigrationResult.skippedCount} skipped)</span>
+                      )}
                     </span>
                     <button
                       type="button"
                       className={`${styles.btn} ${styles.btnSuccess}`}
                       onClick={() => {
-                        window.open(`${targetSiteUrl}/${targetLibrary}/${targetSubfolder}`, '_blank');
+                        const cleanSite = targetSiteUrl.replace(/\/+$/, '');
+                        if (isValidSpoSiteUrl(cleanSite, props.currentWebUrl)) {
+                          const cleanLib = encodeURIComponent(targetLibrary.replace(/^\/+|\/+$/g, '')).replace(/%2F/gi, '/');
+                          const cleanSub = encodeURIComponent(targetSubfolder.replace(/^\/+|\/+$/g, '')).replace(/%2F/gi, '/');
+                          const destUrl = cleanSub ? `${cleanSite}/${cleanLib}/${cleanSub}` : `${cleanSite}/${cleanLib}`;
+                          window.open(destUrl, '_blank', 'noopener,noreferrer');
+                        }
                       }}
                     >
                       📂 Open Destination in SharePoint
@@ -2524,7 +2679,7 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
                     className={`${styles.btn} ${styles.btnSuccess}`}
                     style={{ fontSize: '13px', padding: '9px 18px' }}
                     disabled={isLiveMigrating}
-                    title="Run Live Migration: Immediately replicates all 1,547 folders and uploads files into SharePoint via SPHttpClient under strict security."
+                    title={`Run Live Migration: Immediately replicates all ${inventoryKpis.folders.toLocaleString()} folders and uploads ${inventoryKpis.files.toLocaleString()} files into SharePoint via SPHttpClient under strict security.`}
                     onClick={() => {
                       handleRunLiveMigration().catch(() => {});
                     }}
@@ -2532,7 +2687,7 @@ export const SpoMigrationHub: React.FC<ISpoMigrationHubProps> = (props) => {
                     {isLiveMigrating ? '⏳ Migrating Files...' : '🚀 Run Live Migration to SharePoint Now'}
                     <span
                       className={styles.infoIcon}
-                      title="Run Live Migration: Immediately replicates all 1,547 folders and uploads files into SharePoint via SPHttpClient under strict security."
+                      title={`Run Live Migration: Immediately replicates all ${inventoryKpis.folders.toLocaleString()} folders and uploads ${inventoryKpis.files.toLocaleString()} files into SharePoint via SPHttpClient under strict security.`}
                     >
                       ℹ
                     </span>

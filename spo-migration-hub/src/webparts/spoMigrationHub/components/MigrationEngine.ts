@@ -130,7 +130,7 @@ export function isValidSpoSiteUrl(candidateUrl: string, currentWebUrl?: string):
 /**
  * Sanitizes a CSV cell against Spreadsheet Formula / DDE Injection (=, +, -, @, \t, \r)
  */
-export function sanitizeCsvCell(val: string | number | boolean): string {
+export function sanitizeCsvCell(val: string | number | boolean | undefined): string {
   if (typeof val === 'number' || typeof val === 'boolean') {
     return `"${String(val)}"`;
   }
@@ -623,7 +623,8 @@ export function applyRemediationPlanToInventory(
   remediationPlan: IRemediationPlanItem[],
   maxFileSizeMB: number,
   maxPathLength: number,
-  baseUrlLength: number
+  baseUrlLength: number,
+  replacementChar: string = '_'
 ): IInventoryItem[] {
   const leafRenameMap = new Map<string, string>();
   const folderRenames: Array<{ oldFull: string; newFull: string }> = [];
@@ -658,15 +659,19 @@ export function applyRemediationPlanToInventory(
     const newDirPath = rewriteFolderSegments(item.directoryPath);
     const newFullPath = `${newDirPath}\\${newLeafName}`;
 
-    // Reconstruct relativePath from updated segments
-    const relSegments = item.relativePath.split('/').filter(Boolean);
-    if (relSegments.length > 0) {
-      relSegments[relSegments.length - 1] = newLeafName;
-    }
-    // Also sanitize any ancestor folder segments that were in remediationPlan
-    const newRelPath = relSegments
-      .map((seg, idx) => (idx < relSegments.length - 1 ? getSanitizedName(seg, '_') : seg))
-      .join('/');
+    // Reconstruct relativePath from updated segments, preserving folder collision suffixes from newFullPath
+    const origRelNormalized = item.relativePath.replace(/\//g, '\\');
+    const rootPrefixLen = Math.max(0, item.fullPath.length - origRelNormalized.length);
+    const newRelPath =
+      rootPrefixLen > 0 && newFullPath.length >= rootPrefixLen
+        ? newFullPath.substring(rootPrefixLen).replace(/^[\\/]+/, '').replace(/\\/g, '/')
+        : item.relativePath
+            .split('/')
+            .filter(Boolean)
+            .map((seg, idx, arr) =>
+              idx < arr.length - 1 ? getSanitizedName(seg, replacementChar) : newLeafName
+            )
+            .join('/');
 
     return evaluateSpoItemRules(
       newLeafName,
@@ -1243,7 +1248,7 @@ export function parseImportedPermissionsJson(
 }
 
 /**
- * Stage 4: Target SPO Environment Assessment & 50 GB Batch Benchmark
+ * Stage 4: Target SPO Environment Assessment & 250 GB Batch Benchmark
  */
 export function calculateUrlHeadroom(
   siteUrl: string,
@@ -1326,7 +1331,7 @@ export function buildSimulatedTargetSpoAssessment(
 
 export function runBatchMigrationBenchmark(
   inventory: IInventoryItem[],
-  batchSizeLimitGB: number = 50,
+  batchSizeLimitGB: number = 250,
   interBatchPauseSec: number = 5
 ): IBatchBenchmarkRow[] {
   const files = inventory.filter((i) => i.itemType === 'File');
@@ -1342,7 +1347,7 @@ export function runBatchMigrationBenchmark(
       throttles: 0
     },
     {
-      name: 'Wave 2 — Departmental Bulk Archive (50 GB Cap)',
+      name: `Wave 2 — Departmental Bulk Archive (${batchSizeLimitGB} GB Cap)`,
       files: 14520,
       sizeGB: batchSizeLimitGB,
       mbps: 44.2,
