@@ -210,7 +210,23 @@ Get-PnPAzureADAppSitePermission
 
 ---
 
-## 7. Security Best Practices Checklist
+
+---
+
+## 7. CRITICAL SECURITY NOTICE: High Risk of Leaving API Permissions Unmonitored
+
+> [!CAUTION]
+> **High-Risk Vulnerability: Unmonitored Application API Permissions & Excessive Scope**
+> Granting high-privilege Microsoft Graph or SharePoint Online Application permissions (such as Sites.FullControl.All or Directory.ReadWrite.All) and leaving them active and unmonitored post-migration introduces severe security vulnerabilities across the Microsoft 365 tenant:
+> 
+> 1. **Persistent Backdoor Exposure**: Application permissions bypass Multi-Factor Authentication (MFA) and conditional access policies. If a service principal retains broad tenant-wide permissions after an emergency migration, any compromise of the certificate or key allows an attacker silent, unrestricted access to all site collections.
+> 2. **Silent Data Exfiltration & Privilege Creep**: Unmonitored app registrations provide persistent read/write access without requiring user sign-in. Over time, forgotten application permissions become prime targets for lateral movement and silent exfiltration.
+> 3. **Mandatory Security Controls**:
+>    - **Never Leave Broad Scopes Active**: Immediately revoke Sites.FullControl.All once migration cutovers finish.
+>    - **Enforce Sites.Selected Exclusively**: Restrict the service principal strictly to the designated target migration site collection.
+>    - **Implement Automated Access Reviews**: Schedule recurring Entra ID access reviews and PIM expiration windows for all migration service principals.
+>    - **Stream Audit Logs to SIEM**: Ingest Entra ID Service Principal sign-in logs and Microsoft 365 Unified Audit Logs (UAL) into Microsoft Sentinel or an external SIEM to trigger alerts on anomalous data volume access.
+## 8. Security Best Practices Checklist
 
 - [x] **Private Key Isolation**: Private keys (`.pfx`) are never checked into Git repositories (`.gitignore` enforces `*.pfx`, `*.cer`, `*.key`).
 - [x] **Hardware-Bound Protection**: Production keys should reside in Azure Key Vault (Standard or Premium HSM-backed).
