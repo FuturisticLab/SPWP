@@ -16,6 +16,8 @@ This solution serves as a **rapid emergency response operative** designed to be 
 | [**3. Engineering Effort, Build Facts & Time Metrics**](./03_BUILD_EFFORT_AND_METRICS.md) | Project Governance | Exact engineering hours, sprint cadence, lines of code (LOC), architectural breakdown, test matrix, and verified operational benchmarks. |
 | [**4. Commercial Market Valuation & ROI Analysis**](./04_MARKET_VALUATION_AND_ROI.md) | Business & Financial | Comparative market analysis (ShareGate, AvePoint, Quest, BitTitan), enterprise licensing valuation, total cost of ownership (TCO) savings, and IP asset assessment. |
 | [**5. Technical Instructions & Architectural Blueprint**](./05_TECHNICAL_INSTRUCTIONS_AND_ARCHITECTURE.md) | Architecture & Internals | Full system architecture, 5-stage migration execution pipeline, state machine design, Microsoft limits compliance matrix, and SPHttpClient REST specs. |
+| [**6. Security & Private Key Integration**](./06_SECURITY_AND_PRIVATE_KEY_INTEGRATION.md) | Advanced Security | Certificate-Based Authentication (CBA), X.509 RSA private key creation, Azure Key Vault secretless CI/CD, and granular `Sites.Selected` permission lockdown. |
+| [**Executive One-Page Brief**](./EXECUTIVE_ONE_PAGE_BRIEF.md) | Executive Summary | One-page summary on Theme Studio, Site Mapper, and Migration Hub not-for-profit mission, security architecture, emergency operatives, and figurative valuation. |
 
 ---
 
